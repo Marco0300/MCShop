@@ -6,7 +6,8 @@ In-game ComputerCraft shop for Minecraft 1.21.1 NeoForge.
 
 - `shop_server.lua`: central server, runs on a Command Computer.
 - `shop_client.lua`: player terminal, runs on any ComputerCraft computer.
-- `updater.lua`: downloads the latest server/client files from this repository.
+- `updater.lua`: downloads and validates the latest shop files from this repository.
+- `update.lua`: short command which runs `updater.lua`.
 - `startup-server`: optional startup file for the central computer.
 - `startup-client`: optional startup file for player computers.
 

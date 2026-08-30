@@ -2,7 +2,7 @@
 -- Downloads the latest shop files from GitHub.
 
 local BASE = "https://raw.githubusercontent.com/Marco0300/MCShop/main/"
-local FILES = { "shop_server.lua", "shop_client.lua" }
+local FILES = { "updater.lua", "update.lua", "shop_server.lua", "shop_client.lua" }
 
 local function download(name)
   local response, err = http.get(BASE .. name)
@@ -14,10 +14,19 @@ local function download(name)
   if not data or #data < 50 then
     return false, "Downloaded file is unexpectedly small"
   end
+
+  -- Validate the downloaded file before touching the installed copy.
+  -- This prevents an HTML page, Git diff, or damaged download from being installed.
+  local chunk, syntaxError = load(data, "@" .. name)
+  if not chunk then
+    return false, "Downloaded Lua is invalid: " .. tostring(syntaxError)
+  end
+
   local temp = name .. ".new"
   local file = fs.open(temp, "w")
   file.write(data)
   file.close()
+
   if fs.exists(name) then fs.delete(name) end
   fs.move(temp, name)
   return true
