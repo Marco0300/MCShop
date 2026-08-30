@@ -3,9 +3,10 @@ local P="mcshop"; local modem=peripheral.find("modem")
 if not modem or not modem.isWireless() then error("Attach a wireless modem") end
 rednet.open(peripheral.getName(modem))
 local dbFile="mcshop_db"; local legacyFile="shop_accounts"; local catalogFile="shop_catalog"; local auditFile="mcshop_audit"; local db={accounts={},pins={},sessions={},loans={}}; local adminSessions={}; local lastBackup=0
-local adminKey="change-me"
+local adminKey="change-me"; local importURL=""
 local DAILY_INTEREST=0.10; local INITIATION_FEE=0.02; local LOAN_DAYS=7; local MAX_LOAN=5000
 if fs.exists("shop_admin_key") then local f=fs.open("shop_admin_key","r"); adminKey=f.readAll():gsub("%s+$",""); f.close() end
+if fs.exists("shop_import_url") then local f=fs.open("shop_import_url","r"); importURL=f.readAll():gsub("%s+$",""); f.close() end
 local catalog={
  ["minecraft:coal"]={name="Coal",buy=5,sell=3},
  ["minecraft:iron_ingot"]={name="Iron Ingot",buy=15,sell=10},
@@ -72,7 +73,7 @@ local function handle(id,r)
  if r.action=="admin_balance" then if not adminSessions[id] then return {success=false,error="Admin login required"} end; if not validName(r.username) then return {success=false,error="Invalid username"} end; local amount=math.floor(tonumber(r.amount) or 0); local a=account(r.username); if r.mode=="add" then a.balance=(a.balance or 0)+amount else a.balance=amount end; save(); return {success=true,username=r.username,balance=a.balance} end
  if r.action=="admin_catalog" then if not adminSessions[id] then return {success=false,error="Admin login required"} end; local out={}; for i,v in pairs(catalog) do table.insert(out,{id=i,name=v.name or i,buy=v.buy or 0,sell=v.sell or 0}) end; table.sort(out,function(a,b) return a.id<b.id end); return {success=true,items=out} end
  if r.action=="admin_set_price" then if not adminSessions[id] then return {success=false,error="Admin login required"} end; if not catalog[r.item] then catalog[r.item]={name=r.item} end; catalog[r.item].buy=math.max(0,math.floor(tonumber(r.buy) or 0)); catalog[r.item].sell=math.max(0,math.floor(tonumber(r.sell) or 0)); saveCatalog(); return {success=true} end
- if r.action=="admin_import" then if not adminSessions[id] then return {success=false,error="Admin login required"} end; if not fs.exists("mcshop_import") then return {success=false,error="mcshop_import is missing"} end; local f=fs.open("mcshop_import","r"); local imported=textutils.unserialize(f.readAll()); f.close(); if type(imported)~="table" then return {success=false,error="Invalid import file"} end; local count=0; for i,v in pairs(imported) do if validItem(i) and type(v)=="table" then catalog[i]={name=v.name or i,buy=tonumber(v.buy) or 0,sell=tonumber(v.sell) or 0}; count=count+1 end end; saveCatalog(); return {success=true,count=count} end
+ if r.action=="admin_import" then if not adminSessions[id] then return {success=false,error="Admin login required"} end; local imported=nil; if fs.exists("mcshop_import") then local f=fs.open("mcshop_import","r"); imported=textutils.unserialize(f.readAll()); f.close() elseif importURL~="" then local h,e=http.get(importURL); if h then imported=textutils.unserializeJSON(h.readAll()); h.close() else return {success=false,error="Import download failed: "..tostring(e)} end else return {success=false,error="mcshop_import is missing and shop_import_url is not configured"} end; if type(imported)~="table" then return {success=false,error="Invalid import file"} end; local count=0; for i,v in pairs(imported) do if validItem(i) and type(v)=="table" then catalog[i]={name=v.name or i,buy=tonumber(v.buy) or 0,sell=tonumber(v.sell) or 0}; count=count+1 end end; saveCatalog(); return {success=true,count=count} end
  local s=session(id)
  if r.action=="catalog" then local out={}; for i,v in pairs(catalog) do table.insert(out,{id=i,name=v.name,buy=v.buy,sell=v.sell}) end; return {success=true,items=out} end
  if not s then return {success=false,error="Not logged in"} end
