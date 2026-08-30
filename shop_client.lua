@@ -1,5 +1,9 @@
 -- MCShop player terminal. Set SERVER_ID to the Command Computer ID.
-local SERVER_ID=1; local P="mcshop"; local modem=peripheral.find("modem")
+local SERVER_ID=1
+if fs.exists("shop_settings") then
+  local f=fs.open("shop_settings","r"); SERVER_ID=tonumber(f.readAll()) or SERVER_ID; f.close()
+end
+local P="mcshop"; local modem=peripheral.find("modem")
 if not modem or not modem.isWireless() then error("Attach a wireless modem") end
 rednet.open(peripheral.getName(modem))
 local logged=false; local username=nil; local balance=0
