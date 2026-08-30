@@ -2,7 +2,7 @@
 local P="mcshop"; local modem=peripheral.find("modem")
 if not modem or not modem.isWireless() then error("Attach a wireless modem") end
 rednet.open(peripheral.getName(modem))
-local dbFile="mcshop_db"; local legacyFile="shop_accounts"; local catalogFile="shop_catalog"; local db={accounts={},pins={},sessions={},loans={}}; local adminSessions={}
+local dbFile="mcshop_db"; local legacyFile="shop_accounts"; local catalogFile="shop_catalog"; local auditFile="mcshop_audit"; local db={accounts={},pins={},sessions={},loans={}}; local adminSessions={}; local lastBackup=0
 local adminKey="change-me"
 local DAILY_INTEREST=0.10; local INITIATION_FEE=0.02; local LOAN_DAYS=7; local MAX_LOAN=5000
 if fs.exists("shop_admin_key") then local f=fs.open("shop_admin_key","r"); adminKey=f.readAll():gsub("%s+$",""); f.close() end
@@ -17,10 +17,9 @@ local catalog={
  ["minecraft:obsidian"]={name="Obsidian",buy=20,sell=14}
 }
 local function save()
- local data=textutils.serialize(db)
- local f=fs.open(dbFile,"w"); f.write(data); f.close()
- -- Keep the original filename updated too for backwards compatibility.
- local old=fs.open(legacyFile,"w"); old.write(data); old.close()
+ local data=textutils.serialize(db); local now=os.epoch("utc")
+ if fs.exists(dbFile) and now-lastBackup>=60000 then fs.makeDir("backups"); fs.copy(dbFile,"backups/mcshop_db_"..now); lastBackup=now end
+ local f=fs.open(dbFile,"w"); f.write(data); f.close(); local old=fs.open(legacyFile,"w"); old.write(data); old.close()
 end
 local function loadFile(name)
  if not fs.exists(name) then return nil end
@@ -45,7 +44,8 @@ local function validItem(i) return type(i)=="string" and i:match("^[a-z0-9_.%-]+
 local function qty(q) q=tonumber(q); if not q then return nil end; q=math.floor(q); if q<1 or q>64 then return nil end; return q end
 local function pin() return string.format("%06d",math.random(0,999999)) end
 local function session(id) local s=db.sessions[id]; if s and s.expires>os.epoch("utc") then return s end; db.sessions[id]=nil end
-local function log(n,a,i,q,m) local t={username=n,action=a,item=i,quantity=q,amount=m,time=os.epoch("utc")}; table.insert(account(n).history,t); save() end
+local function audit(action,details) local f=fs.open(auditFile,"a"); f.writeLine(textutils.serialize({time=os.epoch("utc"),action=action,details=details})); f.close() end
+local function log(n,a,i,q,m) db.nextTransactionId=(db.nextTransactionId or 0)+1; local t={id=db.nextTransactionId,username=n,action=a,item=i,quantity=q,amount=m,time=os.epoch("utc")}; table.insert(account(n).history,t); audit("transaction",t); save() end
 local function onlinePlayers() local list={}; local ok,entities=pcall(commands.getEntities,"@a"); if ok and type(entities)=="table" then for _,e in ipairs(entities) do local n=e.displayName or e.name; if n then list[n]=true end end end; return list end
 local function collectPayments() local day=os.day(); local online=onlinePlayers(); local changed=false; for n,l in pairs(db.loans) do if l.status=="active" and online[n] and l.lastPaidDay<day then local a=account(n); local interest=math.ceil(l.remaining*DAILY_INTEREST); local principal=math.min(l.dailyPrincipal,l.remaining); local due=interest+principal; l.lastDue=due; l.interestPaid=(l.interestPaid or 0)+interest; if a.balance>=due then a.balance=a.balance-due; l.remaining=l.remaining-principal; l.paidDays=l.paidDays+1; l.arrears=0; log(n,"loan_payment","loan",1,due) else l.arrears=(l.arrears or 0)+due end; l.lastPaidDay=day; if l.remaining<=0 then l.remaining=0; l.status="paid" end; changed=true end end; if changed then save() end end
 local function loanQuote(amount) local fee=math.ceil(amount*INITIATION_FEE); local remaining=amount; local principal=math.ceil(amount/LOAN_DAYS); local interest=0; local installments={}; for day=1,LOAN_DAYS do local p=math.min(principal,remaining); local i=math.ceil(remaining*DAILY_INTEREST); local due=p+i; interest=interest+i; table.insert(installments,{day=day,principal=p,interest=i,installment=due}); remaining=remaining-p end; return {principal=amount,initiationFee=fee,netPayout=amount-fee,totalInterest=interest,totalRepayment=amount+interest,termDays=LOAN_DAYS,dailyInterestRate=DAILY_INTEREST,installments=installments} end
