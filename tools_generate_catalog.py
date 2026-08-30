@@ -8,6 +8,7 @@ by_id={int(x['id']):x for x in items}
 recipe_by_id={int(k):v for k,v in recipes.items()}
 # Seed prices for items which are treated as raw inputs or have no usable recipe.
 seed_names={'diamond':100,'emerald':80,'netherite_ingot':500,'netherite_scrap':250,'ancient_debris':300,'nether_star':1000,'heart_of_the_sea':250,'shulker_shell':100,'elytra':1000,'dragon_egg':5000,'dragon_breath':75,'blaze_rod':35,'ender_pearl':30,'ghast_tear':60,'gold_ingot':30,'iron_ingot':15,'copper_ingot':10,'coal':5,'redstone':8,'lapis_lazuli':12,'quartz':10,'amethyst_shard':12,'obsidian':20,'raw_iron':12,'raw_gold':24,'raw_copper':8,'stick':1,'string':3,'leather':5,'wheat':2,'carrot':2,'potato':2,'beetroot':2,'sugar_cane':1,'bamboo':1,'cactus':2,'clay_ball':3,'sand':2,'gravel':2,'flint':4,'cobblestone':1,'stone':2,'dirt':1,'oak_log':5,'spruce_log':5,'birch_log':5,'jungle_log':5,'acacia_log':5,'dark_oak_log':5,'cherry_log':5,'mangrove_log':5}
+PRICE_MULTIPLIER=5.0
 def seed(item):
  n=item['name']; return seed_names.get(n, 2 if item['stackSize']>1 else 10)
 def ingredients(recipe):
@@ -22,6 +23,8 @@ def ingredients(recipe):
  return vals
 def recipe_cost(i,memo,vis):
  if i in memo:return memo[i]
+ if by_id[i]['name'] in seed_names:
+  memo[i]=seed(by_id[i]); return memo[i]
  if i in vis:return None
  vis.add(i); best=None
  for r in recipe_by_id.get(i,[]):
@@ -40,7 +43,7 @@ def recipe_cost(i,memo,vis):
 memo={}; out={}
 for i,item in by_id.items():
  if item['name']=='air': continue
- cost=recipe_cost(i,memo,set()); buy=max(1,math.ceil(cost)); sell=max(1,math.floor(buy*0.70))
+ cost=recipe_cost(i,memo,set()); buy=max(1,math.ceil(cost*PRICE_MULTIPLIER)); sell=max(1,math.floor(buy*0.70))
  out['minecraft:'+item['name']]={'name':item['displayName'],'buy':buy,'sell':sell,'baseCost':round(cost,2),'source':'vanilla-1.21.1'}
 # Lua table, understood by ComputerCraft textutils.unserialize.
 def lua(v):

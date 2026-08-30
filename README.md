@@ -23,4 +23,4 @@ In-game ComputerCraft shop for Minecraft 1.21.1 NeoForge.
 4. Set `SERVER_ID` in `shop_client.lua` to the central computer's ID.
 5. Run `shop_server.lua` centrally and `shop_client.lua` on player computers.
 
-The current catalog is intentionally small while the transaction flow is tested. Prices and automatic recipe discovery will be added separately.
+The generator uses a configurable 5x economy multiplier after recipe-derived base cost, and sells at 70% of buy price.
