@@ -1,0 +1,3 @@
+-- Run this on every player computer.
+shell.run("updater.lua")
+shell.run("shop_client.lua")
