@@ -36,6 +36,7 @@ if not db.accounts then db.accounts={} end
 if not db.pins then db.pins={} end
 if not db.sessions then db.sessions={} end
 if not db.loans then db.loans={} end
+for _,l in pairs(db.loans) do l.status=l.status or "active"; l.principal=l.principal or l.remaining or 0; l.remaining=l.remaining or l.principal; l.dailyPrincipal=l.dailyPrincipal or math.ceil(l.remaining/LOAN_DAYS); l.paidDays=l.paidDays or 0; l.arrears=l.arrears or 0; l.lastPaidDay=l.lastPaidDay or os.day() end
 if fs.exists(catalogFile) then local f=fs.open(catalogFile,"r"); local loaded=textutils.unserialize(f.readAll()); f.close(); if type(loaded)=="table" and next(loaded) then catalog=loaded end end
 local function saveCatalog() local f=fs.open(catalogFile,"w"); f.write(textutils.serialize(catalog)); f.close() end
 local function account(n) db.accounts[n]=db.accounts[n] or {balance=1000,history={}}; return db.accounts[n] end
