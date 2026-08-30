@@ -18,7 +18,7 @@ local function download(name)
   -- Validate the downloaded file before touching the installed copy.
   -- This prevents an HTML page, Git diff, or damaged download from being installed.
   local validationData = data
-  if name == "shop_catalog" then validationData = "return " .. data end
+  if name:match("shop_catalog") then validationData = "return " .. data end
   local chunk, syntaxError = load(validationData, "@" .. name)
   if not chunk then
     return false, "Downloaded Lua is invalid: " .. tostring(syntaxError)
