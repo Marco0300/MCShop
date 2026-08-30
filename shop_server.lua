@@ -67,18 +67,16 @@ local function handle(id,r)
   if r.action=="buy" then local total=v.buy*q; if a.balance<total then return {success=false,error="Insufficient funds"} end; local ok=commands.exec("give "..s.username.." "..i.." "..q); if not ok then return {success=false,error="Give command failed"} end; a.balance=a.balance-total; log(s.username,"buy",i,q,total); return {success=true,amount=total,balance=a.balance} end
   local checkOk,checkOutput,available=commands.exec("clear "..s.username.." "..i.." 0")
   if not checkOk then return {success=false,error="The inventory check failed"} end
-  -- Depending on the Minecraft command implementation, the affected count can
-  -- be returned as the third value or only in the command output.
-  if not available then
-   for _,line in ipairs(checkOutput or {}) do
-    local found=line:match("(%d+)")
-    if found then available=tonumber(found); break end
-   end
+  -- Some Minecraft versions return 1 here because one player entity was affected.
+  -- The actual item count is reported in the command output, for example:
+  -- "Found 6 matching items on xdLocutus".
+  for _,line in ipairs(checkOutput or {}) do
+   local found=line:match("[Ff]ound%s+(%d+)")
+   if found then available=tonumber(found); break end
   end
   if not available or available<q then return {success=false,error="You do not have enough items (found "..tostring(available or 0)..")"} end
   local removeOk,removeOutput,removed=commands.exec("clear "..s.username.." "..i.." "..q)
   if not removeOk then return {success=false,error="Remove command failed"} end
-  if removed and removed>0 and removed<q then return {success=false,error="Only "..removed.." items were removed; sale cancelled"} end
   local total=v.sell*q; a.balance=a.balance+total; log(s.username,"sell",i,q,total); return {success=true,amount=total,balance=a.balance}
  end
  return {success=false,error="Unknown action"}
