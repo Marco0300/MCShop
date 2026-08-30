@@ -9,7 +9,8 @@ In-game ComputerCraft shop for Minecraft 1.21.1 NeoForge.
 - `shop_admin.lua`: clickable administrator GUI for prices and imports.
 - `updater.lua`: downloads and validates the latest shop files from this repository.
 - `shop_admin_key.example`: example admin-key file format.
-- `mcshop_import.example`: example manual catalog import format.
+- `shop_catalog`: generated vanilla 1.21.1 catalog with recipe-derived baseline prices.
+- `tools_generate_catalog.py`: reproducible generator using PrismarineJS minecraft-data item and recipe data.
 - `update.lua`: short command which runs `updater.lua`.
 - `startup-server`: optional startup file for the central computer.
 - `startup-client`: optional startup file for player computers.

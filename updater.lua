@@ -2,7 +2,7 @@
 -- Downloads the latest shop files from GitHub.
 
 local BASE = "https://raw.githubusercontent.com/Marco0300/MCShop/main/"
-local FILES = { "updater.lua", "update.lua", "shop_server.lua", "shop_client.lua", "shop_admin.lua" }
+local FILES = { "updater.lua", "update.lua", "shop_server.lua", "shop_client.lua", "shop_admin.lua", "shop_catalog" }
 
 local function download(name)
   local response, err = http.get(BASE .. name .. "?v=" .. tostring(os.epoch("utc")))
