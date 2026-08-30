@@ -1,0 +1,12 @@
+{
+  ["minecraft:diamond"] = {
+    name = "Diamond",
+    buy = 100,
+    sell = 70
+  },
+  ["minecraft:iron_ingot"] = {
+    name = "Iron Ingot",
+    buy = 15,
+    sell = 10
+  }
+}
