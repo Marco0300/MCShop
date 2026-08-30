@@ -54,9 +54,10 @@ local function handle(id,r)
   if p.value~=tostring(r.pin or "") then return {success=false,error="Incorrect PIN"} end
   db.pins[r.username]=nil; local a=account(r.username); db.sessions[id]={username=r.username,expires=os.epoch("utc")+900000}; save(); return {success=true,username=r.username,balance=a.balance}
  end
- local s=session(id); if not s then return {success=false,error="Not logged in"} end
- local a=account(s.username)
+ local s=session(id)
  if r.action=="catalog" then local out={}; for i,v in pairs(catalog) do table.insert(out,{id=i,name=v.name,buy=v.buy,sell=v.sell}) end; return {success=true,items=out} end
+ if not s then return {success=false,error="Not logged in"} end
+ local a=account(s.username)
  if r.action=="balance" then return {success=true,username=s.username,balance=a.balance} end
  if r.action=="history" then return {success=true,transactions=a.history or {}} end
  if r.action=="logout" then db.sessions[id]=nil; return {success=true} end
