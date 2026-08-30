@@ -1,5 +1,5 @@
 -- MCShop player terminal. Set SERVER_ID to the Command Computer ID.
-local SERVER_ID=1
+local SERVER_ID=2
 if fs.exists("shop_settings") then
   local f=fs.open("shop_settings","r"); SERVER_ID=tonumber(f.readAll()) or SERVER_ID; f.close()
 end
