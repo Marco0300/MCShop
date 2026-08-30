@@ -2,7 +2,7 @@
 local P="mcshop"; local modem=peripheral.find("modem")
 if not modem or not modem.isWireless() then error("Attach a wireless modem") end
 rednet.open(peripheral.getName(modem))
-local dbFile="mcshop_db"; local db={accounts={},pins={},sessions={}}
+local dbFile="mcshop_db"; local legacyFile="shop_accounts"; local db={accounts={},pins={},sessions={}}
 local catalog={
  ["minecraft:coal"]={name="Coal",buy=5,sell=3},
  ["minecraft:iron_ingot"]={name="Iron Ingot",buy=15,sell=10},
@@ -13,8 +13,25 @@ local catalog={
  ["minecraft:emerald"]={name="Emerald",buy=80,sell=55},
  ["minecraft:obsidian"]={name="Obsidian",buy=20,sell=14}
 }
-local function save() local f=fs.open(dbFile,"w"); f.write(textutils.serialize(db)); f.close() end
-if fs.exists(dbFile) then local f=fs.open(dbFile,"r"); db=textutils.unserialize(f.readAll()) or db; f.close() end
+local function save()
+ local data=textutils.serialize(db)
+ local f=fs.open(dbFile,"w"); f.write(data); f.close()
+ -- Keep the original filename updated too for backwards compatibility.
+ local old=fs.open(legacyFile,"w"); old.write(data); old.close()
+end
+local function loadFile(name)
+ if not fs.exists(name) then return nil end
+ local f=fs.open(name,"r"); local value=textutils.unserialize(f.readAll()); f.close()
+ return type(value)=="table" and value or nil
+end
+-- Prefer the legacy file when it contains existing accounts, otherwise use the new file.
+local oldData=loadFile(legacyFile)
+local newData=loadFile(dbFile)
+if oldData and oldData.accounts and next(oldData.accounts) then db=oldData
+elseif newData then db=newData end
+if not db.accounts then db.accounts={} end
+if not db.pins then db.pins={} end
+if not db.sessions then db.sessions={} end
 local function account(n) db.accounts[n]=db.accounts[n] or {balance=1000,history={}}; return db.accounts[n] end
 local function validName(n) return type(n)=="string" and n:match("^[A-Za-z0-9_]+$") and #n<=16 end
 local function validItem(i) return type(i)=="string" and i:match("^[a-z0-9_.%-]+:[a-z0-9_./%-]+$") end

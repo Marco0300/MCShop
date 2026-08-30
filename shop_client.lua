@@ -25,7 +25,13 @@ local function trade(action)
  write("Item number (0 cancels): "); local k=tonumber(read()); if not k or k==0 or not items[k] then return end
  write("Quantity 1-64: "); local q=tonumber(read()); local r=req({action=action,item=items[k].id,quantity=q}); print(r.error or (action.." successful")); if r.success then balance=r.balance; print("Amount: "..r.amount.."  Balance: "..balance) end; pause()
 end
+local function history()
+ if not logged then print("Log in first"); pause(); return end
+ local r=req({action="history"}); term.clear(); term.setCursorPos(1,1); print("======= HISTORY =======")
+ if not r.success then print(r.error) else if #r.transactions==0 then print("No transactions yet") else for _,t in ipairs(r.transactions) do print(t.action.." | "..t.quantity.."x "..t.item.." | "..t.amount.." credits") end end end
+ pause()
+end
 while true do
- term.clear(); term.setCursorPos(1,1); print("========== MCShop =========="); print(logged and (username.." | balance "..balance) or "Not logged in"); print("1. Login"); print("2. Buy"); print("3. Sell"); print("4. Balance"); print("5. Logout"); print("0. Exit"); write("> "); local c=read()
- if c=="1" then login() elseif c=="2" then trade("buy") elseif c=="3" then trade("sell") elseif c=="4" then local r=req({action="balance"}); print(r.error or ("Balance: "..r.balance)); pause() elseif c=="5" then req({action="logout"}); logged=false; username=nil; balance=0 elseif c=="0" then break end
+ term.clear(); term.setCursorPos(1,1); print("========== MCShop =========="); print(logged and (username.." | balance "..balance) or "Not logged in"); print("1. Login"); print("2. Buy"); print("3. Sell"); print("4. Balance"); print("5. History"); print("6. Logout"); print("0. Exit"); write("> "); local c=read()
+ if c=="1" then login() elseif c=="2" then trade("buy") elseif c=="3" then trade("sell") elseif c=="4" then local r=req({action="balance"}); print(r.error or ("Balance: "..r.balance)); pause() elseif c=="5" then history() elseif c=="6" then req({action="logout"}); logged=false; username=nil; balance=0 elseif c=="0" then break end
 end
