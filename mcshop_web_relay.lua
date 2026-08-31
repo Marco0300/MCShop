@@ -1,6 +1,6 @@
 -- MCShop web relay. Run on the central Command Computer.
 -- Change BRIDGE to the Ubuntu VM LAN address.
-local BRIDGE="http://192.168.1.50:8091"; local SERVER_ID=2; local PROTOCOL="mcshop"; local modem=peripheral.find("modem")
+local BRIDGE="http://192.168.3.108:8091"; local SERVER_ID=2; local PROTOCOL="mcshop"; local modem=peripheral.find("modem")
 if not modem or not modem.isWireless() then error("Attach a wireless modem") end
 rednet.open(peripheral.getName(modem))
 while true do
