@@ -3,11 +3,14 @@
 local BRIDGE="http://192.168.3.108:8091"; local SERVER_ID=2; local PROTOCOL="mcshop"; local modem=peripheral.find("modem")
 if not modem or not modem.isWireless() then error("Attach a wireless modem") end
 rednet.open(peripheral.getName(modem))
+print("MCShop web relay online")
+print("Bridge: "..BRIDGE.."  Server: "..SERVER_ID)
 while true do
  local h,e=http.get(BRIDGE.."/api/poll")
  if h then
   local job=textutils.unserializeJSON(h.readAll()); h.close()
   if job and job.id and job.request then
+   print("Forwarding web request "..job.id)
    local target=job.request.clientKey or ("web:"..job.id)
    local response
    local ok,err=pcall(function() response=({success=true}) end)
