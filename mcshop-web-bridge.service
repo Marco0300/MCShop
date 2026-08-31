@@ -1,0 +1,15 @@
+[Unit]
+Description=MCShop LAN Web Bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermes
+WorkingDirectory=/home/hermes/MCShop
+ExecStart=/usr/bin/python3 /home/hermes/MCShop/mcshop_web_bridge.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

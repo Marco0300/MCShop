@@ -11,7 +11,10 @@ In-game ComputerCraft shop for Minecraft 1.21.1 NeoForge.
 - `shop_admin_key.example`: example admin-key file format.
 - `shop_catalog`: generated vanilla 1.21.1 catalog with recipe-derived baseline prices.
 - `tools_generate_catalog.py`: reproducible generator using PrismarineJS minecraft-data item and recipe data.
-- `update.lua`: short command which runs `updater.lua`.
+- `mcshop_web_bridge.py`: LAN-only browser bridge for the ComputerCraft relay.
+- `mcshop_web_relay.lua`: relay for a separate ComputerCraft computer; forwards browser requests to server ID 2.
+- `web_index.html`: player and admin browser interface.
+- `mcshop-web-bridge.service`: optional systemd service for the LAN bridge.
 - `startup-server`: optional startup file for the central computer.
 - `startup-client`: optional startup file for player computers.
 
