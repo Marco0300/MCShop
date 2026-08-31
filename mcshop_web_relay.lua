@@ -16,8 +16,10 @@ while true do
    local _,r=rednet.receive(PROTOCOL,10)
    response=r or {success=false,error="MCShop server did not respond"}
    response.clientKey=nil
-   http.request({url=BRIDGE.."/api/respond",method="POST",headers={['Content-Type']='application/json'},body=textutils.serializeJSON({id=job.id,response=response})})
+   local payload=textutils.serializeJSON({id=job.id,response=response})
+   local rh,re=http.post(BRIDGE.."/api/respond",payload,{['Content-Type']='application/json'})
+   if rh then rh.close() else print("Bridge response failed: "..tostring(re)) end
   end
- else sleep(2) end
+ else print("Bridge poll failed: "..tostring(e)); sleep(2) end
  sleep(0.2)
 end
