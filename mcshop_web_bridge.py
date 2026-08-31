@@ -21,6 +21,12 @@ class Handler(BaseHTTPRequestHandler):
         if p=='/api/status': self.send_json({'ok':True,'queued':len(QUEUE),'pending':len(WAITING)}); return
         if p=='/' or p=='/index.html':
             b=(ROOT/'web_index.html').read_bytes(); self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b); return
+        if p.startswith('/assets/items/'):
+            rel=p[len('/assets/items/'):]
+            assets=(ROOT/'web_assets'/'items').resolve(); target=(assets/rel).resolve()
+            if target.is_relative_to(assets) and target.is_file() and target.suffix=='.png':
+                b=target.read_bytes(); self.send_response(200); self.send_header('Content-Type','image/png'); self.send_header('Cache-Control','public, max-age=86400'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b); return
+            self.send_error(404); return
         self.send_error(404)
     def do_POST(self):
         p=urlparse(self.path).path
